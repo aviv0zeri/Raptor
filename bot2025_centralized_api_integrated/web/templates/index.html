@@ -1,0 +1,39 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dual Real-Time Log Consoles</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}?v=1" />
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>Dual Real-Time Log Consoles</h1>
+
+    <div class="log-container">
+      <!-- First log console -->
+      <div class="logBox1" id="logBox1">
+        <div id="logBox-currentprice" class="log-Box">
+          <h2>Current Price</h2>
+        </div>
+        <div id="logBox-pricelimit" class="log-Box">
+          <h2>Highest Limit</h2>
+        </div>
+        <div id="logBox-timestamp" class="log-Box">
+          <h2>Timestamp</h2>
+        </div>
+      </div>
+
+      <!-- Second log console -->
+      <div id="logBox2" class="logBox2">
+        <div id="logBox-details" class="log-Box">
+          <h2>Details</h2>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

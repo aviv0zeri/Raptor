@@ -1,0 +1,98 @@
+/* Base styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f4f4f4;
+}
+
+h1 {
+  text-align: center;
+}
+
+/* Flex container for log boxes */
+.log-container {
+  display: flex; /* Use Flexbox to align the log boxes in a row */
+  justify-content: space-between; /* Distribute space evenly between the two log boxes */
+  gap: 20px; /* Space between the two log boxes */
+  margin-top: 20px; /* Space above the log containers */
+}
+
+/* Log box styles */
+.log-Box {
+  height: 400px; /* Set a fixed height for the log boxes */
+  background-color: #2c3e50;
+  color: white;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out; /* Smooth transition for all changes */
+}
+
+/* Logbox1 flex styles to evenly distribute child elements */
+.logBox1 {
+  display: flex; /* Use Flexbox to align the three log boxes inside logbox1 */
+  justify-content: space-between; /* Distribute the log boxes evenly */
+  width: 48%; /* Logbox1 takes 45% of the container width */
+  gap: 5px; /* Space between the child log boxes */
+}
+
+/* Heading styles for the log boxes */
+.log-Box h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ecf0f1;
+}
+
+/* Individual log message styling */
+.log-Box div {
+  margin-bottom: 10px; /* Space between log messages */
+  font-size: 14px;
+  line-height: 1.6;
+  border: #2c3e50 2px solid;
+}
+
+/* Fade-in effect for newly added messages */
+.fade-in {
+  opacity: 0;
+  animation: fadeInAnimation 250ms forwards; /* Fade in over 250ms */
+}
+
+/* Animation for fade-in effect */
+@keyframes fadeInAnimation {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Logbox2 styles */
+.logBox2 {
+  width: 48%; /* Logbox2 takes 45% of the container width */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .log-container {
+    flex-direction: column; /* Stack the log boxes vertically on smaller screens */
+  }
+
+  .logBox1,
+  .logBox2 {
+    width: 100%; /* Log boxes will take full width on small screens */
+    height: 250px; /* Reduce height on small screens */
+  }
+
+  .logBox1 {
+    flex-direction: column; /* Stack the log boxes inside logbox1 vertically on small screens */
+    gap: 10px; /* Reduce space between the boxes */
+  }
+}
