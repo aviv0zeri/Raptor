@@ -1,1 +1,0 @@
-LogModule belongs in this directory because the module will work the same for all the program as it is general.

@@ -4,6 +4,12 @@ import os
 import random
 import warnings
 import sys
+import urllib3
+
+# 🤫 Suppress SSL warnings from urllib3 - we know what we're doing
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
+warnings.filterwarnings("ignore", message="ssl module.*LibreSSL")
 
 # Add the Model directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))

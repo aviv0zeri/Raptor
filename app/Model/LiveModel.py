@@ -2,8 +2,13 @@ import os
 import sys
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-import sys
-import os
+import warnings
+import urllib3
+
+# 🤫 Suppress SSL warnings from urllib3 - we know what we're doing  
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
+warnings.filterwarnings("ignore", message="ssl module.*LibreSSL")
 from Bot.ver_1.tools import wrapper
 
 class LiveModel:

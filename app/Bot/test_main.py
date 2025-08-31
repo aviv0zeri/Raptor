@@ -156,7 +156,7 @@ async def main():
     # Configuration
     csv_file = 'bot_output_auto.csv'
     model_file = os.path.join('..', 'model_output.csv')
-    stoploss_file = "stoploss.txt"
+    stoploss_file = os.path.join("logs", "stoploss.txt")
     
     # Initialize files
     if not os.path.exists(csv_file):

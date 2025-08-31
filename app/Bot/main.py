@@ -436,7 +436,7 @@ async def simulate_test_stop_loss(coin, trade, client, cur, conn, initial_price)
     The test guardian that simulates protection mechanisms
     """
     try:
-        stoploss_file = "data/output/test_stoploss.txt"
+        stoploss_file = os.path.join("logs", "stoploss.txt")
         
         # Simulate monitoring for a few seconds
         for i in range(5):
@@ -523,7 +523,7 @@ async def monitor_stop_loss(tracker, coin, trade, client, cur, conn):
     The eternal vigilance that watches over our positions
     """
     try:
-        stoploss_file = "data/output/stoploss.txt"
+        stoploss_file = os.path.join("logs", "stoploss.txt")
         
         while tracker.is_tracking and not tracker.stop_loss_triggered:
             # Log current status
