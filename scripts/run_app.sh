@@ -44,8 +44,9 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Project root
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Project root (parent directory of scripts)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 # Function to print colored status
@@ -113,7 +114,7 @@ wait_for_service() {
 
 # Function to check if virtual environment exists
 check_venv() {
-    if [ ! -d "venv" ]; then
+    if [ ! -d "app/venv" ] && [ ! -d ".venv" ]; then
         print_error "Virtual environment not found. Please run setup first."
         exit 1
     fi
@@ -150,7 +151,12 @@ start_backend() {
     
     # Activate virtual environment
     print_status "Activating virtual environment"
-    source venv/bin/activate
+    # Activate virtual environment (try app/venv first, then .venv)
+    if [ -d "app/venv" ]; then
+        source app/venv/bin/activate
+    elif [ -d ".venv" ]; then
+        source .venv/bin/activate
+    fi
     
     # Create necessary directories
     print_status "Creating necessary directories..."
@@ -247,7 +253,12 @@ start_main_bot() {
     print_status "Starting main trading bot..."
     
     # Activate virtual environment
-    source venv/bin/activate
+    # Activate virtual environment (try app/venv first, then .venv)
+    if [ -d "app/venv" ]; then
+        source app/venv/bin/activate
+    elif [ -d ".venv" ]; then
+        source .venv/bin/activate
+    fi
     
     # Start main bot in background
     python3 Bot/main.py > logs/main_bot.log 2>&1 &
@@ -262,7 +273,12 @@ start_model() {
     print_status "Starting ML model..."
     
     # Activate virtual environment
-    source venv/bin/activate
+    # Activate virtual environment (try app/venv first, then .venv)
+    if [ -d "app/venv" ]; then
+        source app/venv/bin/activate
+    elif [ -d ".venv" ]; then
+        source .venv/bin/activate
+    fi
     
     # Start model in background
     python3 Model/main.py > logs/model.log 2>&1 &

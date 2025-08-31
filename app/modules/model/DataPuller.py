@@ -1,6 +1,7 @@
 import os
 import sys
-from .BinancePuller import *
+import pandas as pd
+from app.modules.model.BinancePuller import BinancePuller
 import datetime as dt
 import time
 

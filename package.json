@@ -1,3 +1,35 @@
 {
-  "type": "module"
+  "type": "module",
+  "name": "raptor",
+  "version": "1.0.0",
+  "description": "A sophisticated cryptocurrency trading bot with real-time monitoring, paper trading, and professional-grade architecture. Built with Python, React, PostgreSQL, and WebSocket technology.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aviv0zeri/Raptor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aviv0zeri/Raptor/issues"
+  },
+  "homepage": "https://github.com/aviv0zeri/Raptor#readme",
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
+    "express": "^5.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
 }

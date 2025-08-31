@@ -1,18 +1,29 @@
 import time
+from datetime import datetime
+import sys
+import os
 import schedule
 import os
 import random
 import warnings
 import sys
 import urllib3
+import json
+import requests
 
 # 🤫 Suppress SSL warnings from urllib3 - we know what we're doing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
 warnings.filterwarnings("ignore", message="ssl module.*LibreSSL")
 
-# Add the Model directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add the Model and App directories to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_dir = current_dir
+app_dir = os.path.abspath(os.path.join(current_dir, '..', '..'))
+project_root = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
+for p in [model_dir, app_dir, project_root]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 try:
     from BinancePuller import *
@@ -72,6 +83,34 @@ def update_model_output_file(signal, quantity, coin, model_output_path):
     return None
     
 
+def emit_webhook_signal(signal_value, coin_symbol, price_value, confidence_value=None):
+    """Send the model signal to the webhook server in a structured format.
+
+    Payload format aligns with the model reader expectations:
+    {
+      "type": "model_signal",
+      "data": { timestamp, signal, confidence, price, reasoning },
+      "timestamp": ...
+    }
+    """
+    try:
+        webhook_url = os.environ.get('WEBHOOK_URL', 'http://localhost:5001/webhook')
+        payload = {
+            "type": "model_signal",
+            "data": {
+                "timestamp": datetime.now().isoformat(),
+                "signal": 'BUY' if signal_value == 1 else 'HOLD',
+                "confidence": confidence_value if confidence_value is not None else 0.5,
+                "price": float(price_value) if price_value is not None else 0.0,
+                "reasoning": f"Live model {('BUY' if signal_value == 1 else 'HOLD')} signal for {coin_symbol}"
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        requests.post(webhook_url, data=json.dumps(payload), headers={"Content-Type": "application/json"}, timeout=3)
+    except Exception:
+        # Avoid crashing scheduled job on network errors
+        pass
+
 def main():
 
     print('Starting the Model...\n')
@@ -92,11 +131,11 @@ def main():
     target_currency = 'CHZUSDT' 
     base_url = 'https://fapi.binance.com'
     end_point = '/fapi/v1/klines'
-    rawdata_path = os.path.join('Data','rawdata')
-    dataset_path = os.path.join('Data','dataset.csv')
-    lagged_data_path = os.path.join('Data','lagged_data.csv')
+    rawdata_path = os.path.join('..', '..', 'Data', 'rawdata')
+    dataset_path = os.path.join('..', '..', 'Data', 'dataset.csv')
+    lagged_data_path = os.path.join('..', '..', 'Data', 'lagged_data.csv')
     global model_output_path
-    model_output_path = os.path.join('..', 'model_output.csv')
+    model_output_path = os.path.join('..', '..', '..', 'model_output.csv')
 
     low_puller = BinancePuller(base_url, end_point, rawdata_path, currencies)
     data_puller = DataPuller(currencies, target_currency, rawdata_path, dataset_path, low_puller, lagged_data_path)
@@ -108,7 +147,7 @@ def main():
     #---------------------------------------------------------------------------------------
 
     ### Schedule the function to run every wanted period
-    schedule.every(1).minutes.do(lambda: perform_action(data_puller,model=model))
+    schedule.every(10).seconds.do(lambda: perform_action(data_puller,model=model))
 
     ## Keep the script running to ensure the scheduling happens
     while True:
@@ -125,6 +164,15 @@ def perform_action(data_puller: DataPuller, model: LiveModel):
     signal = model.predict(last_lagged_row)
     print(f'Got signal: {signal}')
     update_model_output_file(signal, 1, target_currency, model_output_path)
+    # Also emit webhook event for UI/model reader
+    try:
+        current_price = None
+        # Best-effort: get latest price from Binance for target currency on a short interval
+        if hasattr(data_puller, 'low_puller') and hasattr(data_puller.low_puller, 'get_current_price'):
+            current_price = data_puller.low_puller.get_current_price(target_currency, '1m')
+        emit_webhook_signal(signal, target_currency, current_price, confidence_value=None)
+    except Exception:
+        pass
 
 
 

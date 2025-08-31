@@ -16,8 +16,7 @@ from .api_utils import (
     APIError,
     InvalidTradingPairError,
     UnsupportedClientTypeError,
-    TradingPairCheckError,
-    NotFiatCurrencyException
+    TradingPairCheckError
 )
 
 from .wrapper import (
@@ -42,7 +41,6 @@ __all__ = [
     'InvalidTradingPairError',
     'UnsupportedClientTypeError',
     'TradingPairCheckError',
-    'NotFiatCurrencyException',
     
     # Wrapper functions
     'make_binance_request',

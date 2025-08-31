@@ -3,7 +3,7 @@ import pytz
 import requests
 import pandas as pd
 import os
-from Bot.ver_1.tools import wrapper
+from app.Bot.tools.api import wrapper
 
 class BinancePuller:
 

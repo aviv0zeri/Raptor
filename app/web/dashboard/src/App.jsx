@@ -8,6 +8,7 @@ import LogsViewer from './components/LogsViewer';
 import TestRunner from './components/TestRunner';
 import SystemStatus from './components/SystemStatus';
 import Settings from './components/Settings';
+import SignalWall from './components/SignalWall';
 
 
 // 🌟 Purple Theme with Cosmic Styling
@@ -312,6 +313,7 @@ function App() {
             <Route path="/test" element={<TestRunner />} />
             <Route path="/status" element={<SystemStatus />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/wall" element={<SignalWall />} />
           </Routes>
         </DashboardLayout>
       </Router>
