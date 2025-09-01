@@ -173,7 +173,7 @@ start_backend() {
     
     # Start webhook server
     print_status "Starting webhook server on port 5001..."
-    python3 webhook/webhook_server.py > logs/webhook_app.log 2>&1 &
+    python3 app/modules/webhook/webhook_server.py > logs/webhook_app.log 2>&1 &
     WEBHOOK_PID=$!
     
     # Wait for webhook server
@@ -261,7 +261,7 @@ start_main_bot() {
     fi
     
     # Start main bot in background
-    python3 Bot/main.py > logs/main_bot.log 2>&1 &
+    python3 app/modules/bot/main.py > logs/main_bot.log 2>&1 &
     MAIN_BOT_PID=$!
     
     print_success "Main bot started successfully (PID: $MAIN_BOT_PID)"
@@ -281,7 +281,7 @@ start_model() {
     fi
     
     # Start model in background
-    python3 Model/main.py > logs/model.log 2>&1 &
+    python3 app/modules/model/main.py > logs/model.log 2>&1 &
     MODEL_PID=$!
     
     print_success "ML model started successfully (PID: $MODEL_PID)"
@@ -410,6 +410,26 @@ main() {
             start_backend
             start_main_bot
             start_model
+            ;;
+        "test-stack")
+            print_info "Running test stack (webhook + frontend + test model + test bot)"
+            start_backend
+            start_frontend
+            # Start test model
+            print_status "Starting test model..."
+            if [ -d "app/venv" ]; then
+                source app/venv/bin/activate
+            elif [ -d ".venv" ]; then
+                source .venv/bin/activate
+            fi
+            python3 app/modules/model/test_model.py > logs/model_test.log 2>&1 &
+            TEST_MODEL_PID=$!
+            print_success "Test model started (PID: $TEST_MODEL_PID)"
+            # Start test bot
+            print_status "Starting test bot..."
+            python3 app/modules/test/test_main.py > logs/test_bot.log 2>&1 &
+            TEST_BOT_PID=$!
+            print_success "Test bot started (PID: $TEST_BOT_PID)"
             ;;
         "full"|*)
             print_info "Running in full mode"

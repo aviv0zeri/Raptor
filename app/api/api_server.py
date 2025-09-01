@@ -25,6 +25,7 @@ CORS(app)  # Enable CORS for React frontend
 
 # Global state
 bot_process = None
+test_stack_process = None
 bot_logs = []
 system_status = {
     'overall': 'offline',
@@ -376,12 +377,12 @@ def update_component_status():
             try:
                 cmdline = ' '.join(proc.info['cmdline'] or [])
                 
-                if 'Model/main.py' in cmdline:
+                if 'app/modules/model/main.py' in cmdline or 'Model/main.py' in cmdline:
                     system_status['components']['model']['status'] = 'online'
                     system_status['components']['model']['lastUpdate'] = datetime.now()
                     system_status['components']['model']['performance'] = 85
                 
-                elif 'Bot/ver_1/main.py' in cmdline:
+                elif 'app/modules/bot/main.py' in cmdline or 'Bot/ver_1/main.py' in cmdline:
                     system_status['components']['main']['status'] = 'online'
                     system_status['components']['main']['lastUpdate'] = datetime.now()
                     system_status['components']['main']['performance'] = 90
@@ -420,9 +421,95 @@ def monitor_bot_process():
     if bot_process:
         log_message("Bot process ended", 'info')
 
+
+@app.route('/api/test-stack/start', methods=['POST'])
+def start_test_stack():
+    """Start webhook, frontend, test model, and test bot together."""
+    global test_stack_process
+    try:
+        if test_stack_process and test_stack_process.poll() is None:
+            return jsonify({'success': False, 'message': 'Test stack already running', 'pid': test_stack_process.pid})
+
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'run_test_stack.sh'))
+        cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+        # Start script in its own session so we can manage it
+        test_stack_process = subprocess.Popen(
+            ['bash', script_path],
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        log_message("Test stack started", 'info')
+        return jsonify({'success': True, 'pid': test_stack_process.pid})
+    except Exception as e:
+        log_message(f"Failed to start test stack: {e}", 'error')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/test-stack/stop', methods=['POST'])
+def stop_test_stack():
+    """Stop test stack services using recorded PIDs and free ports."""
+    global test_stack_process
+    try:
+        pids_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'logs', 'test_stack.pids'))
+        killed = []
+        if os.path.exists(pids_file):
+            with open(pids_file, 'r') as f:
+                for line in f:
+                    if '=' in line:
+                        _, val = line.strip().split('=', 1)
+                        try:
+                            pid = int(val)
+                            try:
+                                os.kill(pid, 9)
+                                killed.append(pid)
+                            except Exception:
+                                pass
+                        except ValueError:
+                            pass
+
+        # Also attempt to kill by common ports
+        try:
+            import subprocess as sp
+            for port in (5001, 5173, 8765):
+                try:
+                    out = sp.check_output(['lsof', '-ti', f':{port}']).decode().strip()
+                    for pid_str in out.splitlines():
+                        if pid_str:
+                            try:
+                                os.kill(int(pid_str), 9)
+                                killed.append(int(pid_str))
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # Stop wrapper script process
+        if test_stack_process and test_stack_process.poll() is None:
+            try:
+                test_stack_process.terminate()
+                test_stack_process.wait(timeout=5)
+            except Exception:
+                try:
+                    test_stack_process.kill()
+                except Exception:
+                    pass
+        test_stack_process = None
+
+        log_message(f"Test stack stopped; killed PIDs: {killed}", 'info')
+        return jsonify({'success': True, 'killed': killed})
+    except Exception as e:
+        log_message(f"Failed to stop test stack: {e}", 'error')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 if __name__ == '__main__':
     log_message("API Server started", 'info')
     print("🌟 Cosmic Trading Bot API Server")
-    print("🌐 API available at: http://localhost:5000")
+    print("🌐 API available at: http://localhost:5050")
     print("📊 React Dashboard should connect to: http://localhost:5173")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5050, debug=True)

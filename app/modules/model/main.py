@@ -135,7 +135,7 @@ def main():
     dataset_path = os.path.join('..', '..', 'Data', 'dataset.csv')
     lagged_data_path = os.path.join('..', '..', 'Data', 'lagged_data.csv')
     global model_output_path
-    model_output_path = os.path.join('..', '..', '..', 'model_output.csv')
+    model_output_path = os.path.join('..', '..', '..', 'logs', 'model_output.csv')
 
     low_puller = BinancePuller(base_url, end_point, rawdata_path, currencies)
     data_puller = DataPuller(currencies, target_currency, rawdata_path, dataset_path, low_puller, lagged_data_path)

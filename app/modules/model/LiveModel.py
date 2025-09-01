@@ -9,7 +9,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
 warnings.filterwarnings("ignore", message="ssl module.*LibreSSL")
-from app.Bot.tools.api import wrapper
+from app.modules.api import wrapper
 
 class LiveModel:
 

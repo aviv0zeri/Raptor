@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 export default function SignalWall() {
   const [signals, setSignals] = useState([]);
   const [clock, setClock] = useState(new Date());
+  const [busy, setBusy] = useState(false);
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -43,6 +44,18 @@ export default function SignalWall() {
     return () => clearInterval(t);
   }, []);
 
+  const callApi = async (path) => {
+    try {
+      setBusy(true);
+      const res = await fetch(`http://localhost:5050${path}`, { method: 'POST' });
+      await res.json().catch(() => ({}));
+    } catch (e) {
+      console.warn('API call failed', e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div style={{
       backgroundColor: '#000',
@@ -59,7 +72,19 @@ export default function SignalWall() {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 24, fontWeight: 700 }}>Raptor Signal Wall</div>
-        <div style={{ fontSize: 18, opacity: 0.85 }}>{clock.toLocaleTimeString()}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => callApi('/api/test-stack/start')}
+            disabled={busy}
+            style={{ background: '#fff', color: '#000', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}
+          >Start</button>
+          <button
+            onClick={() => callApi('/api/test-stack/stop')}
+            disabled={busy}
+            style={{ background: '#444', color: '#fff', border: '1px solid #666', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}
+          >Stop</button>
+          <div style={{ fontSize: 18, opacity: 0.85 }}>{clock.toLocaleTimeString()}</div>
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', gap: 24, marginTop: 24 }}>
