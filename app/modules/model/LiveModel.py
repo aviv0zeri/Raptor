@@ -28,17 +28,24 @@ class LiveModel:
         df['open_time'] = pd.to_datetime(df['open_time'])
         df.set_index('open_time', inplace=True)
         target_column = self.target + '_T+1'
+        # Clean data: drop NaNs, replace infs
+        df = df.replace([float('inf'), float('-inf')], pd.NA).dropna(axis=0, how='any')
+        if df.empty:
+            raise ValueError('Prepared dataset is empty after cleaning')
         X = df.drop([target_column], axis=1)
-        Y = self.get_labels(df[self.target + '_T+1'], thresholds)
+        # Coerce all features to numeric and replace any remaining NaNs with 0
+        X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
+        Y = self.get_labels(df[target_column], thresholds)
         self.model.fit(X, Y)
 
     def predict(self, last_row):
-        X = last_row.drop([self.target + '_T+1', 'open_time']).to_frame().T
+        # Ensure no NaNs at prediction time
+        X = last_row.drop([self.target + '_T+1', 'open_time']).fillna(0).to_frame().T
         return self.model.predict(X)[0]
 
     def get_labels(self, sr, threshold):
-        sr['label'] = sr.apply(lambda x: 1 if x > threshold else 0)
-        return sr['label']
+        # Return binary labels as a Series aligned to sr
+        return (sr > threshold).astype(int)
 
     def calc_weights(self, y_train):
         w0 = 0.5

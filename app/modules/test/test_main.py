@@ -154,11 +154,13 @@ async def main():
     print('🦖 Starting Raptor Test Bot...\n')
     
     # Configuration
-    csv_file = 'bot_output_auto.csv'
-    model_file = os.path.join('..', 'model_output.csv')
+    # Write all test CSVs under logs/, and use test-specific filenames
+    csv_file = os.path.join('..', '..', '..', 'logs', 'bot_output_auto_test.csv')
+    model_file = os.path.join('..', '..', '..', 'logs', 'model_output_test.csv')
     stoploss_file = os.path.join("logs", "stoploss.txt")
     
     # Initialize files
+    os.makedirs(os.path.dirname(csv_file), exist_ok=True)
     if not os.path.exists(csv_file):
         with open(csv_file, 'w', newline='') as f:
             writer = csv.writer(f)

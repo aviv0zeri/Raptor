@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 import pytz
 import requests
 import pandas as pd
@@ -12,6 +13,11 @@ class BinancePuller:
         self.endpoint = endpoint
         self.rawdata_path = rawdata_path
         self.currencies = currencies
+        # Ensure rawdata directory exists
+        try:
+            os.makedirs(self.rawdata_path, exist_ok=True)
+        except Exception:
+            pass
 
     def print(self):
         print(f'Base URL: {self.base_url}')
@@ -86,10 +92,19 @@ class BinancePuller:
 
     def get_currencies_data(self, interval, start_date, end_date, format):
         for currency in self.currencies:
+            currency_file = os.path.join(self.rawdata_path, f'{currency}.csv')
+            # Check if file exists and is recent (less than 7 days old)
+            if os.path.exists(currency_file):
+                file_age = time.time() - os.path.getmtime(currency_file)
+                if file_age < 604800:  # 7 days in seconds
+                    print(f'Using existing data for {currency} (age: {file_age/3600:.1f} hours)')
+                    continue
+            
+            print(f'Downloading fresh data for {currency}...')
             df = self.get_currency_data(currency, interval, start_date, end_date, format)
             if df.empty:
                 raise Exception(f'Failed to withdraw data for {currency}')
-            df.to_csv(os.path.join(self.rawdata_path, f'{currency}.csv'), index=False)
+            df.to_csv(currency_file, index=False)
         print('All the data is ready')
 
     def append_candles(self, interval):

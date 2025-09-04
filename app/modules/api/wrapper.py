@@ -41,8 +41,8 @@ def make_binance_request(method, url, api_key=None, secret_key=None, **kwargs):
         # logger.info(f"Headers: {kwargs.get('headers')}")
         # logger.info(f"Timeout: {kwargs.get('timeout', 'default')}")
 
-        # Use a default timeout if not specified
-        timeout = kwargs.pop("timeout", (5, 10))  # Connection timeout = 5s, Read timeout = 10s
+        # Use a default timeout if not specified - increased for better reliability
+        timeout = kwargs.pop("timeout", (15, 30))  # Connection timeout = 15s, Read timeout = 30s
 
         # Handle signed requests
         if api_key and secret_key:

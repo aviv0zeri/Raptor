@@ -82,6 +82,7 @@ class WebhookServer:
         # WebSocket connections
         self.websocket_connections: Set[websockets.WebSocketServerProtocol] = set()
         self.websocket_lock = threading.Lock()
+        self.websocket_loop = None
         
         # Event queue
         self.event_queue: List[Dict[str, Any]] = []
@@ -186,13 +187,18 @@ class WebhookServer:
     def _run_websocket_server_sync(self):
         """Run WebSocket server in sync mode to avoid async issues"""
         try:
+            print("🔄 Starting WebSocket server...")
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            self.websocket_loop = loop
+            print("✅ WebSocket event loop created")
             loop.run_until_complete(self._run_websocket_server())
         except Exception as e:
             print(f"❌ WebSocket server error: {e}")
+            import traceback
+            traceback.print_exc()
     
-    async def _websocket_handler(self, websocket, path):
+    async def _websocket_handler(self, websocket, path=None):
         """Handle WebSocket connections"""
         try:
             # Add connection
@@ -222,48 +228,55 @@ class WebhookServer:
     async def _run_websocket_server(self):
         """Run WebSocket server"""
         try:
-            async with websockets.serve(self._websocket_handler, self.host, 8765):
-                print(f"🌟 WebSocket server started on ws://{self.host}:8765")
-                await asyncio.Future()  # Run forever
+            print(f"🔄 Creating WebSocket server on {self.host}:8767...")
+            server = await websockets.serve(self._websocket_handler, self.host, 8767)
+            print(f"🌟 WebSocket server started on ws://{self.host}:8767")
+            await asyncio.Future()  # Run forever
         except Exception as e:
             print(f"❌ WebSocket server error: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _broadcast_events(self):
-        """Broadcast events to WebSocket connections"""
+        """Broadcast events to WebSocket connections.
+        If there are no active WebSocket connections, keep events in the queue so
+        that HTTP polling via /api/events can retrieve them.
+        """
         while True:
             try:
-                # Get events to broadcast
-                with self.event_lock:
-                    events = self.event_queue.copy()
-                    self.event_queue.clear()
-                
-                if events:
-                    # Get current connections
-                    with self.websocket_lock:
-                        connections = list(self.websocket_connections)
-                    
-                    # Broadcast to all connections
-                    for event in events:
-                        message = json.dumps(event)
-                        for websocket in connections:
-                            try:
-                                # Use asyncio.run_coroutine_threadsafe for thread safety
-                                loop = asyncio.get_event_loop()
-                                if loop.is_running():
-                                    future = asyncio.run_coroutine_threadsafe(
-                                        websocket.send(message), loop
-                                    )
-                                    future.result(timeout=1)
-                                else:
-                                    asyncio.run(websocket.send(message))
-                            except Exception as e:
-                                print(f"❌ Failed to send to WebSocket: {e}")
-                                # Remove broken connection
-                                with self.websocket_lock:
-                                    self.websocket_connections.discard(websocket)
-                
+                # Check current connections
+                with self.websocket_lock:
+                    connections = list(self.websocket_connections)
+
+                # Only drain the queue when there are active WS clients
+                if connections:
+                    with self.event_lock:
+                        events = self.event_queue.copy()
+                        self.event_queue.clear()
+                else:
+                    events = []
+
+                # Broadcast to all connections
+                for event in events:
+                    message = json.dumps(event)
+                    for websocket in connections:
+                        try:
+                            loop = self.websocket_loop
+                            if loop and loop.is_running():
+                                future = asyncio.run_coroutine_threadsafe(
+                                    websocket.send(message), loop
+                                )
+                                future.result(timeout=1)
+                            else:
+                                # Fallback: try sending synchronously
+                                asyncio.run(websocket.send(message))
+                        except Exception as e:
+                            print(f"❌ Failed to send to WebSocket: {e}")
+                            with self.websocket_lock:
+                                self.websocket_connections.discard(websocket)
+
                 time.sleep(0.1)  # Small delay to prevent busy waiting
-                
+
             except Exception as e:
                 print(f"❌ Broadcast error: {e}")
                 time.sleep(1)
@@ -301,4 +314,6 @@ def broadcast_log_event(category: str, level: str, message: str, data: Dict[str,
     })
 
 if __name__ == '__main__':
-    webhook_server.run(debug=True)
+    # Run without Flask debug/reloader to avoid double-starting background
+    # threads and WebSocket bind conflicts on port 8767.
+    webhook_server.run(debug=False)

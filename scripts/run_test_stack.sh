@@ -73,7 +73,7 @@ start_frontend() {
 }
 
 start_test_model() {
-  log "Starting test model (random BUY/HOLD every 10s)"
+  log "Starting Python test_model.py (JSON via API)"
   activate_venv
   python3 app/modules/model/test_model.py > logs/model_test.log 2>&1 &
   TEST_MODEL_PID=$!
@@ -92,7 +92,7 @@ main() {
   log "Running Test Stack from $PROJECT_ROOT"
   mkdir -p logs app/Data/rawdata Data/output Data/backup
   kill_port 5001
-  kill_port 8765
+  kill_port 8767
 
   start_webhook
   start_api
@@ -108,6 +108,12 @@ main() {
   echo "API_PID=$API_PID" >> logs/test_stack.pids
 
   log "Open http://localhost:5173/wall for SignalWall"
+  # Try to auto-open Microsoft Edge to the Signal Wall
+  if command -v open &> /dev/null; then
+    open -a "Microsoft Edge" "http://localhost:5173/wall" 2>/dev/null || \
+    open -a "Edge" "http://localhost:5173/wall" 2>/dev/null || \
+    warn "Could not open Edge automatically. Please open http://localhost:5173/wall manually"
+  fi
   log "Press Ctrl+C to stop"
   trap 'warn "Stopping..."; [ ! -z "$TEST_BOT_PID" ] && kill $TEST_BOT_PID 2>/dev/null || true; [ ! -z "$TEST_MODEL_PID" ] && kill $TEST_MODEL_PID 2>/dev/null || true; [ ! -z "$FRONTEND_PID" ] && kill $FRONTEND_PID 2>/dev/null || true; [ ! -z "$WEBHOOK_PID" ] && kill $WEBHOOK_PID 2>/dev/null || true; ok "Stopped"; exit 0' INT TERM
   while true; do sleep 10; done

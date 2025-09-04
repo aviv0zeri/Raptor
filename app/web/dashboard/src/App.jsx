@@ -308,7 +308,7 @@ function App() {
       <Router>
         <DashboardLayout>
           <Routes>
-            <Route path="/" element={<TradingDashboard />} />
+            <Route path="/" element={<SignalWall />} />
             <Route path="/logs" element={<LogsViewer />} />
             <Route path="/test" element={<TestRunner />} />
             <Route path="/status" element={<SystemStatus />} />

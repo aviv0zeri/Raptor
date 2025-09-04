@@ -457,4 +457,4 @@ This software is for educational and testing purposes only. Trading cryptocurren
 
 ---
 
-**🌟 Built with ❤️ for the crypto trading community**
+** Built by aviv0zeri - Product is owned by Reptillix Organization. **

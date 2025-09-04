@@ -1,0 +1,52 @@
+{
+  "signal_format": {
+    "description": "Standard signal format used throughout the Raptor trading system",
+    "version": "1.0",
+    "fields": {
+      "timestamp": {
+        "type": "string",
+        "format": "ISO 8601",
+        "description": "When the signal was generated",
+        "example": "2025-09-04T22:43:43.123Z"
+      },
+      "signal": {
+        "type": "string",
+        "enum": ["BUY", "SELL", "HOLD"],
+        "description": "The trading signal type"
+      },
+      "confidence": {
+        "type": "number",
+        "range": [0.0, 1.0],
+        "description": "Confidence level of the signal (0.0 = no confidence, 1.0 = maximum confidence)"
+      },
+      "reasoning": {
+        "type": "string",
+        "description": "Human-readable explanation of why this signal was generated"
+      },
+      "model": {
+        "type": "string",
+        "enum": ["real", "test"],
+        "description": "Which model generated this signal"
+      },
+      "interval": {
+        "type": "string",
+        "enum": ["1m", "5m", "15m", "30m", "1h", "2h", "4h"],
+        "description": "Time interval used for signal generation"
+      },
+      "symbol": {
+        "type": "string",
+        "description": "Trading pair symbol (e.g., CHZ/USDT)",
+        "example": "CHZ/USDT"
+      }
+    },
+    "example": {
+      "timestamp": "2025-09-04T22:43:43.123Z",
+      "signal": "HOLD",
+      "confidence": 0.75,
+      "reasoning": "Live model HOLD signal for CHZ/USDT",
+      "model": "real",
+      "interval": "1m",
+      "symbol": "CHZ/USDT"
+    }
+  }
+}

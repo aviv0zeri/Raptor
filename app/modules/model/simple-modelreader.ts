@@ -55,7 +55,9 @@ class SimpleModelReader {
     return new Promise((resolve, reject) => {
       console.log('🐍 Starting Python model process...');
       
-      const pythonScript = path.join(process.cwd(), 'app', 'modules', 'model', 'main.py');
+      // Allow selecting which Python model to run (default: test_model.py)
+      const modelScript = process.env.MODEL_SCRIPT || 'test_model.py';
+      const pythonScript = path.join(process.cwd(), 'app', 'modules', 'model', modelScript);
       
       this.pythonProcess = spawn('python3', [pythonScript], {
         stdio: ['pipe', 'pipe', 'pipe'],

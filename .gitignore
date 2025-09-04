@@ -108,3 +108,5 @@ backup/
 *.flv
 *.webm
 *.7z
+app/Data/dataset.csv
+app/Data/lagged_data.csv

@@ -1,5 +1,5 @@
 import psycopg2  # Used for interacting with PostgreSQL databases
-from ..config.config import DB_CONFIG  # Adjust the import path to match your directory structure
+from ..config.config_manager import get_config  # Use centralized config manager
 from .order import Order  # Adjust the import path to match your directory structure
 from ..utils.log_module import CustomLogger  # Adjust the import path to match your directory structure
 
@@ -9,10 +9,18 @@ logger = CustomLogger("app.log")
 # Function to connect to the PostgreSQL database
 def connect():
     try:
-        # Establish a database connection using the DB_CONFIG parameters
-        conn = psycopg2.connect(**DB_CONFIG)
+        # Build DB params from config manager
+        db_params = {
+            'host': get_config('database', 'host', 'localhost'),
+            'port': get_config('database', 'port', 5432),
+            'dbname': get_config('database', 'dbname', 'trading_bot'),
+            'user': get_config('database', 'user', 'postgres'),
+            'password': get_config('database', 'password', 'password'),
+        }
+        # Establish a database connection using the config parameters
+        conn = psycopg2.connect(**db_params)
         # Retrieve the database name from the configuration
-        db_name = DB_CONFIG.get('dbname', 'Unknown Database')
+        db_name = db_params.get('dbname', 'Unknown Database')
         return conn, db_name  # Return the connection object and database name
     except Exception as e:
         logger.log('error', f"Error: Unable to connect to the database. {e}")

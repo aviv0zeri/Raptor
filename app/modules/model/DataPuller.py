@@ -84,7 +84,8 @@ class DataPuller:
 
 
     def get_lag_last_row(self):
-        return self.lags_df.iloc[-1, :]
+        # Ensure no NaNs in the row; fill with 0 for safety
+        return self.lags_df.iloc[-1, :].fillna(0)
 
 
     ### This function is getting all the data from binance creating the dataset 
@@ -97,7 +98,7 @@ class DataPuller:
 
 
     def get_lag_second_last_row(self):
-        return self.lags_df.iloc[-2, :]
+        return self.lags_df.iloc[-2, :].fillna(0)
 
 
 def main():

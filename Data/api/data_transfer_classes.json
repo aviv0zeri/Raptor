@@ -1,0 +1,55 @@
+{
+  "data_transfer_classes": {
+    "description": "Classes and data structures used for data transfer in the Raptor system",
+    "version": "1.0",
+    "classes": {
+      "Signal": {
+        "file": "app/modules/utils/signal.py",
+        "description": "Main signal data class",
+        "fields": {
+          "timestamp": "datetime",
+          "signal": "str (BUY/SELL/HOLD)",
+          "confidence": "float (0.0-1.0)",
+          "reasoning": "str",
+          "model": "str",
+          "interval": "str"
+        }
+      },
+      "ModelStatus": {
+        "description": "Model status information",
+        "fields": {
+          "running": "bool",
+          "ready": "bool",
+          "interval": "str",
+          "model_name": "str",
+          "pid": "int"
+        }
+      },
+      "WebSocketMessage": {
+        "description": "WebSocket message format",
+        "fields": {
+          "type": "str (model_signal, model_status, log_event)",
+          "data": "dict",
+          "timestamp": "str"
+        }
+      }
+    },
+    "data_flow": {
+      "model_to_api": {
+        "method": "HTTP POST",
+        "endpoint": "/api/model/signal",
+        "format": "Signal class as JSON"
+      },
+      "api_to_webhook": {
+        "method": "HTTP POST",
+        "endpoint": "/webhook",
+        "format": "WebSocketMessage"
+      },
+      "webhook_to_frontend": {
+        "method": "WebSocket",
+        "endpoint": "ws://localhost:8767",
+        "format": "WebSocketMessage"
+      }
+    }
+  }
+}

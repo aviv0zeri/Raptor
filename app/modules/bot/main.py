@@ -26,12 +26,13 @@ BINANCE_SECRET_KEY = os.getenv('BINANCE_SECRET_KEY')
 from app.modules.utils.log_module import CustomLogger
 from app.modules.database.order import Order, Receipt
 from app.modules.database.database import connect, insert_order
-from app.modules.tools import utils as ut
+from app.modules.api.wrapper import make_binance_request
+# from app.modules.api.wrapper import make_order  # Not needed for signals only
 from app.modules.utils.sync_time_utils import sync_system_time, get_formatted_time
 from app.modules.utils.cache_manager import cache_manager
 from app.modules.config.config_manager import config_manager
 from app.modules.utils.wallet_utils import print_wallet, get_wallet_summary
-from app.modules.trading.stop_loss import CoinTracker, get_asset_balance_in_usdt, stop_loss_manager
+# from app.modules.trading.stop_loss import CoinTracker, get_asset_balance_in_usdt, stop_loss_manager  # Not needed for signals only
 from app.modules.exceptions.bot_exceptions import (
     BotException, TradingException, DatabaseException,
     ConfigurationException, raise_insufficient_balance
@@ -63,7 +64,7 @@ class Wallet:
                 return
 
             url = "https://api.binance.com/api/v3/account"
-            response = ut.make_binance_request(
+            response = make_binance_request(
                 method="GET",
                 url=url,
                 api_key=BINANCE_API_KEY,
@@ -99,7 +100,7 @@ class Wallet:
             else:
                 url = "https://api.binance.com/api/v3/ticker/price"
                 params = {"symbol": f"{self.bot_coin}USDT"}
-                response = ut.make_binance_request(
+                response = make_binance_request(
                     method="GET",
                     url=url,
                     api_key=BINANCE_API_KEY,
@@ -228,7 +229,8 @@ async def execute_buy_order(trade, wallet, coin, base_coin, client, cur, conn, t
             amount = wallet.usdt_amount - 0.5
             if amount <= 0:
                 raise raise_insufficient_balance(coin, amount, wallet.usdt_amount)
-        receipt = await ut.make_order(cur, conn, client, logger, coin, base_coin, amount, "BUY", "USDT", None, test_order)
+        # receipt = await make_order(cur, conn, client, logger, coin, base_coin, amount, "BUY", "USDT", None, test_order)  # Not needed for signals only
+        receipt = None  # Placeholder for signals only
         end_time = time.time()
         trade.execution_time = end_time - start_time
         if hasattr(receipt, 'execution_time'):
@@ -292,7 +294,8 @@ async def execute_test_stop_loss_sell(coin, trade, client, cur, conn, stoploss_f
     try:
         start_time = time.time()
         amount = 10.0
-        receipt = await ut.make_order(cur, conn, client, logger, coin, "USDT", amount, "SELL", "USDT", None, True)
+        # receipt = await make_order(cur, conn, client, logger, coin, "USDT", amount, "SELL", "USDT", None, True)  # Not needed for signals only
+        receipt = None  # Placeholder for signals only
         end_time = time.time()
         trade.execution_time = end_time - start_time
         if hasattr(receipt, 'execution_time'):
@@ -346,7 +349,8 @@ async def execute_stop_loss_sell(coin, trade, client, cur, conn, stoploss_file):
         wallet.update_wallet()
         start_time = time.time()
         amount = wallet.bot_coin_amount - 0.5
-        receipt = await ut.make_order(cur, conn, client, logger, coin, "USDT", amount, "SELL", "USDT", None, False)
+        # receipt = await make_order(cur, conn, client, logger, coin, "USDT", amount, "SELL", "USDT", None, False)  # Not needed for signals only
+        receipt = None  # Placeholder for signals only
         end_time = time.time()
         trade.execution_time = end_time - start_time
         if hasattr(receipt, 'execution_time'):
@@ -365,7 +369,7 @@ async def execute_stop_loss_sell(coin, trade, client, cur, conn, stoploss_file):
 
 def log_order_to_csv(receipt, trade, is_hold=False):
     try:
-        csv_file = 'data/output/bot_output_auto.csv'
+        csv_file = os.path.join('..', '..', 'logs', 'bot_output_auto.csv')
         os.makedirs(os.path.dirname(csv_file), exist_ok=True)
         if not os.path.exists(csv_file):
             with open(csv_file, 'w', newline='') as f:
@@ -420,7 +424,7 @@ async def main():
 
 
 async def run_trading_loop(client, cur, conn, USD_FIAT, test_order):
-    model_file = os.path.join('..', '..', 'model_output.csv')
+    model_file = os.path.join('..', '..', 'logs', 'model_output.csv')
     last_processed_timestamp = None
     waiting_for_signals_printed = False
     logger.log('info', "🔄 Starting trading loop...")
